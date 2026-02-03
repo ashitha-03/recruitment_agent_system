@@ -1,5 +1,5 @@
 import os
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from openai import OpenAI
 
 client = OpenAI(
@@ -88,6 +88,7 @@ Give a final recommendation.
         ]
     )
     return response.choices[0].message.content
+
 
 
 
