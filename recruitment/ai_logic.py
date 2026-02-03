@@ -90,8 +90,7 @@ def rank_candidates(job_desc: str, resumes: list):
 # ----------------------------------
 # AI RECOMMENDATION (LLM)
 # ----------------------------------
-def ai_recommend(job_desc: str, resumes: list):
-
+def ai_recommend(job_desc, resumes):
     if not resumes:
         return "No resumes available for AI analysis."
 
@@ -100,10 +99,10 @@ Job Description:
 {job_desc}
 
 Candidate Resumes:
-{[r['text'][:700] for r in resumes[:3]]}
+{[r['text'][:600] for r in resumes[:3]]}
 
 Explain why the BEST candidate is a good fit.
-Use 4–5 concise bullet points.
+Use 4–5 bullet points.
 """
 
     response = client.chat.completions.create(
@@ -111,12 +110,7 @@ Use 4–5 concise bullet points.
         messages=[
             {
                 "role": "system",
-                "content": (
-                    "You are a recruiter assistant AI. "
-                    "Explain why the given candidate is a good fit. "
-                    "Do not compare with others. "
-                    "Do not reject anyone."
-                )
+                "content": "You are an AI recruiter assistant."
             },
             {
                 "role": "user",
@@ -126,6 +120,7 @@ Use 4–5 concise bullet points.
     )
 
     return response.choices[0].message.content
+
 
 
 
