@@ -9,12 +9,6 @@ client = OpenAI(
 
 
 # ---------------------------
-# INIT LLM CLIENT
-# ---------------------------
-client = OpenAI()   # API key comes from Streamlit Secrets
-
-
-# ---------------------------
 # PDF READER
 # ---------------------------
 def read_pdf(path: str) -> str:
@@ -137,6 +131,7 @@ Use 4–5 concise bullet points.
     )
 
     return response.choices[0].message.content
+
 
 
 
