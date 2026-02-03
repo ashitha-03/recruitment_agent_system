@@ -8,9 +8,15 @@ client = OpenAI(
 )
 
 
-# ---------------------------
+# ----------------------------------
+# RESUME DIRECTORY (FIXED PATH)
+# ----------------------------------
+BASE_DIR = os.path.dirname(__file__)          # recruitment/
+RESUME_DIR = os.path.join(BASE_DIR, "resumes")
+
+# ----------------------------------
 # PDF READER
-# ---------------------------
+# ----------------------------------
 def read_pdf(path: str) -> str:
     text = ""
     try:
@@ -22,34 +28,23 @@ def read_pdf(path: str) -> str:
     return text
 
 
-# ---------------------------
+# ----------------------------------
 # LOAD RESUMES (PDF DATASET)
-# ---------------------------
-def load_resumes(folder="resumes"):
-    """
-    Returns:
-    [
-        {
-            "name": "candidate_1.pdf",
-            "text": "resume content..."
-        },
-        ...
-    ]
-    """
-
+# ----------------------------------
+def load_resumes():
     resumes = []
 
-    if not os.path.exists(folder):
+    if not os.path.exists(RESUME_DIR):
         return resumes
 
-    for file in os.listdir(folder):
+    for file in os.listdir(RESUME_DIR):
         if not file.lower().endswith(".pdf"):
             continue
 
-        path = os.path.join(folder, file)
+        path = os.path.join(RESUME_DIR, file)
         text = read_pdf(path)
 
-        if text.strip():  # IMPORTANT: ignore empty PDFs
+        if text.strip():
             resumes.append({
                 "name": file,
                 "text": text
@@ -58,9 +53,9 @@ def load_resumes(folder="resumes"):
     return resumes
 
 
-# ---------------------------
+# ----------------------------------
 # SKILL EXTRACTION (RULE BASED)
-# ---------------------------
+# ----------------------------------
 def extract_skills(text: str):
     skills = [
         "python", "java", "sql", "machine learning",
@@ -72,9 +67,9 @@ def extract_skills(text: str):
     return [s for s in skills if s in text]
 
 
-# ---------------------------
+# ----------------------------------
 # CANDIDATE RANKING
-# ---------------------------
+# ----------------------------------
 def rank_candidates(job_desc: str, resumes: list):
     jd_skills = extract_skills(job_desc)
     results = []
@@ -92,9 +87,9 @@ def rank_candidates(job_desc: str, resumes: list):
     return sorted(results, key=lambda x: x["score"], reverse=True)
 
 
-# ---------------------------
+# ----------------------------------
 # AI RECOMMENDATION (LLM)
-# ---------------------------
+# ----------------------------------
 def ai_recommend(job_desc: str, resumes: list):
 
     if not resumes:
@@ -131,19 +126,6 @@ Use 4–5 concise bullet points.
     )
 
     return response.choices[0].message.content
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
