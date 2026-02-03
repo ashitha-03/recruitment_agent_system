@@ -32,7 +32,7 @@ def read_pdf(path: str) -> str:
 
 # ----------------------------------
 # LOAD RESUMES (PDF DATASET)
-# ----------------------------------
+
 def load_resumes():
     resumes = []
 
@@ -53,6 +53,7 @@ def load_resumes():
             })
 
     return resumes
+
 
 
 # ----------------------------------
@@ -117,4 +118,5 @@ Use 4–5 bullet points.
     )
 
     return response.choices[0].message.content
+
 
