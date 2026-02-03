@@ -7,52 +7,87 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1"
 )
 
-def read_pdf(path):
+
+# ---------------------------
+# INIT LLM CLIENT
+# ---------------------------
+client = OpenAI()   # API key comes from Streamlit Secrets
+
+
+# ---------------------------
+# PDF READER
+# ---------------------------
+def read_pdf(path: str) -> str:
     text = ""
     try:
         reader = PdfReader(path)
         for page in reader.pages:
             text += page.extract_text() or ""
-    except:
+    except Exception:
         pass
     return text
 
 
+# ---------------------------
+# LOAD RESUMES (PDF DATASET)
+# ---------------------------
 def load_resumes(folder="resumes"):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    """
+    Returns:
+    [
+        {
+            "name": "candidate_1.pdf",
+            "text": "resume content..."
+        },
+        ...
+    ]
+    """
 
     resumes = []
 
-for file in pdf_files:
-    reader = PdfReader(file)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text() or ""
+    if not os.path.exists(folder):
+        return resumes
 
-    if text.strip():  # IMPORTANT
-        resumes.append(text)
+    for file in os.listdir(folder):
+        if not file.lower().endswith(".pdf"):
+            continue
 
+        path = os.path.join(folder, file)
+        text = read_pdf(path)
+
+        if text.strip():  # IMPORTANT: ignore empty PDFs
+            resumes.append({
+                "name": file,
+                "text": text
             })
+
     return resumes
 
 
-def extract_skills(text):
+# ---------------------------
+# SKILL EXTRACTION (RULE BASED)
+# ---------------------------
+def extract_skills(text: str):
     skills = [
         "python", "java", "sql", "machine learning",
-        "deep learning", "docker", "aws", "react", "django"
+        "deep learning", "docker", "aws",
+        "react", "django"
     ]
+
     text = text.lower()
     return [s for s in skills if s in text]
 
 
-def rank_candidates(job_desc, resumes):
+# ---------------------------
+# CANDIDATE RANKING
+# ---------------------------
+def rank_candidates(job_desc: str, resumes: list):
     jd_skills = extract_skills(job_desc)
     results = []
 
     for r in resumes:
-        rs_skills = extract_skills(r["text"])
-        matched = list(set(jd_skills) & set(rs_skills))
+        resume_skills = extract_skills(r["text"])
+        matched = list(set(jd_skills) & set(resume_skills))
 
         results.append({
             "candidate": r["name"],
@@ -63,7 +98,25 @@ def rank_candidates(job_desc, resumes):
     return sorted(results, key=lambda x: x["score"], reverse=True)
 
 
-def ai_recommend(job_desc, resumes):
+# ---------------------------
+# AI RECOMMENDATION (LLM)
+# ---------------------------
+def ai_recommend(job_desc: str, resumes: list):
+
+    if not resumes:
+        return "No resumes available for AI analysis."
+
+    prompt = f"""
+Job Description:
+{job_desc}
+
+Candidate Resumes:
+{[r['text'][:700] for r in resumes[:3]]}
+
+Explain why the BEST candidate is a good fit.
+Use 4–5 concise bullet points.
+"""
+
     response = client.chat.completions.create(
         model="mistralai/mistral-7b-instruct",
         messages=[
@@ -71,33 +124,19 @@ def ai_recommend(job_desc, resumes):
                 "role": "system",
                 "content": (
                     "You are a recruiter assistant AI. "
-                    "Explain why the GIVEN candidate is a good fit. "
-                    "Do NOT compare with other candidates. "
-                    "Do NOT recommend alternatives. "
-                    "Do NOT reject anyone. "
-                    "Keep it concise (4–5 bullet points)."
+                    "Explain why the given candidate is a good fit. "
+                    "Do not compare with others. "
+                    "Do not reject anyone."
                 )
             },
             {
                 "role": "user",
-                "content": f"""
-Job Description:
-{job_desc}
-
-Candidate Resumes:
-{[r['text'][:700] for r in resumes[:3]]}
-
-Give a final recommendation.
-"""
+                "content": prompt
             }
         ]
     )
+
     return response.choices[0].message.content
-
-
-
-
-
 
 
 
