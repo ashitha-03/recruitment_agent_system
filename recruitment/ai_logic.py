@@ -23,11 +23,16 @@ def load_resumes(folder="resumes"):
         os.makedirs(folder)
 
     resumes = []
-    for f in os.listdir(folder):
-        if f.endswith(".pdf"):
-            resumes.append({
-                "name": f.replace(".pdf", ""),
-                "text": read_pdf(os.path.join(folder, f))
+
+for file in pdf_files:
+    reader = PdfReader(file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() or ""
+
+    if text.strip():  # IMPORTANT
+        resumes.append(text)
+
             })
     return resumes
 
@@ -88,6 +93,7 @@ Give a final recommendation.
         ]
     )
     return response.choices[0].message.content
+
 
 
 
