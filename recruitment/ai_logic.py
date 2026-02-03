@@ -1,9 +1,10 @@
+
+
 import os
-from pypdf import PdfReader
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="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",
+    api_key=os.environ.get("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"),
     base_url="https://openrouter.ai/api/v1"
 )
 
@@ -99,7 +100,7 @@ Job Description:
 {job_desc}
 
 Candidate Resumes:
-{[r['text'][:600] for r in resumes[:3]]}
+{[r['text'][:500] for r in resumes[:3]]}
 
 Explain why the BEST candidate is a good fit.
 Use 4–5 bullet points.
@@ -108,22 +109,10 @@ Use 4–5 bullet points.
     response = client.chat.completions.create(
         model="mistralai/mistral-7b-instruct",
         messages=[
-            {
-                "role": "system",
-                "content": "You are an AI recruiter assistant."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
+            {"role": "system", "content": "You are an AI recruiter assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.4
     )
 
     return response.choices[0].message.content
-
-
-
-
-
-
-
