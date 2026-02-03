@@ -4,22 +4,35 @@ from auth import login_block, logout_block
 from ui import load_styles, card_start, card_end
 from ai_logic import load_resumes, rank_candidates, ai_recommend
 
-# ---- PAGE STATE PERSISTENCE ----
+
+# =========================
+# PAGE STATE
+# =========================
 if "page" not in st.session_state:
     st.session_state.page = "Best Fit Recommendation"
 
 
+# =========================
+# INIT APP
+# =========================
 init_db()
 load_styles()
 login_block()
 logout_block()
 
-resumes = load_resumes()
+resumes = load_resumes() or []   # SAFE DEFAULT
 
+
+# =========================
+# HEADER
+# =========================
 st.markdown("## 🎯 Recruiter Dashboard")
 st.caption("AI-powered candidate recommendation system")
 
 
+# =========================
+# SIDEBAR NAV
+# =========================
 pages = ["Best Fit Recommendation", "Resume Explorer", "History"]
 
 page = st.sidebar.radio(
@@ -31,11 +44,10 @@ page = st.sidebar.radio(
 st.session_state.page = page
 
 
-# -----------------------------
-# BEST FIT PAGE
-# -----------------------------
+# ======================================================
+# PAGE 1: BEST FIT RECOMMENDATION
+# ======================================================
 if page == "Best Fit Recommendation":
-    
 
     card_start()
 
@@ -43,11 +55,10 @@ if page == "Best Fit Recommendation":
 
     job_desc = st.text_area(
         "",
-        placeholder="e.g. Looking for a Machine Learning engineer with Python and SQL experience",
+        placeholder="e.g. Looking for a Java developer with SQL experience",
         height=120
     )
 
-    st.markdown("#### 🔍 What the system does")
     st.markdown(
         "- 📄 Parses resumes\n"
         "- 🧠 Matches relevant skills\n"
@@ -55,16 +66,26 @@ if page == "Best Fit Recommendation":
     )
 
     if st.button("✨ Find Best Fit"):
+
         if not job_desc.strip():
-            st.warning("⚠️ Please enter job requirements to get recommendations.")
+            st.warning("⚠️ Please enter job requirements.")
+            st.stop()
+
+        if not resumes:
+            st.error("⚠️ No resumes loaded. Please upload or preload resumes.")
             st.stop()
 
         results = rank_candidates(job_desc, resumes)
+
+        if not results:
+            st.warning("No suitable candidates found. Please refine the job description.")
+            st.stop()
+
         best = results[0]
 
         st.markdown("### 🏆 Recommended Candidate")
         st.success(f"**{best['candidate']}**")
-        st.write("Matched skills:", ", ".join(best["matched"]) or "No exact match")
+        st.write("Matched skills:", ", ".join(best["matched"]) or "None")
 
         save_history(
             st.session_state.username,
@@ -79,24 +100,31 @@ if page == "Best Fit Recommendation":
     card_end()
 
 
-# -----------------------------
-# RESUME EXPLORER
-# -----------------------------
+# ======================================================
+# PAGE 2: RESUME EXPLORER
+# ======================================================
 elif page == "Resume Explorer":
+
     st.subheader("📄 Resume Explorer")
 
-    names = [r["name"] for r in resumes]
-    selected = st.selectbox("Select Candidate", names)
+    if not resumes:
+        st.warning("No resumes available to display.")
+    else:
+        names = [r["name"] for r in resumes]
 
-    resume = next(r for r in resumes if r["name"] == selected)
+        selected = st.selectbox("Select Candidate", names)
 
-    st.markdown("**Resume Content:**")
-    st.text_area("", resume["text"], height=300)
+        resume = next((r for r in resumes if r["name"] == selected), None)
 
-# -----------------------------
-# HISTORY
-# -----------------------------
+        if resume:
+            st.text_area("Resume Content", resume["text"], height=300)
+
+
+# ======================================================
+# PAGE 3: HISTORY
+# ======================================================
 elif page == "History":
+
     st.subheader("🕘 Recommendation History")
 
     rows = get_history(st.session_state.username)
