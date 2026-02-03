@@ -4,9 +4,10 @@ import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key=os.environ.get("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"),
+    api_key=os.environ.get("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1"
 )
+
 
 
 # ----------------------------------
@@ -116,3 +117,4 @@ Use 4–5 bullet points.
     )
 
     return response.choices[0].message.content
+
