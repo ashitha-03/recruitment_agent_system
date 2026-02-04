@@ -13,7 +13,7 @@ client = OpenAI(
 # ----------------------------------
 # RESUME DIRECTORY (FIXED PATH)
 # ----------------------------------
-BASE_DIR = os.path.dirname(__file__)          # recruitment/
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESUME_DIR = os.path.join(BASE_DIR, "resumes")
 
 # ----------------------------------
@@ -118,5 +118,6 @@ Use 4–5 bullet points.
     )
 
     return response.choices[0].message.content
+
 
 
